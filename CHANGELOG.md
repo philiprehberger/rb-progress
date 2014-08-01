@@ -1,19 +1,17 @@
 # Changelog
 
-All notable changes to this gem will be documented in this file.
+All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-## [0.1.0] - 2026-03-21
+## [0.1.0] - 2026-03-22
 
 ### Added
-- Initial release
-- `Bar` class with percentage, ETA, throughput, and customizable format
-- `Spinner` class with multiple frame sets (default, braille, dots)
-- `Multi` class for tracking multiple concurrent progress bars
-- Convenience methods `Progress.bar`, `Progress.spin`, `Progress.multi`
-- `Enumerable#each_with_progress` integration
+
+- `Bar` class with percentage, ETA, throughput, and progress visualization
+- `Spinner` class with braille frame animation
+- `Progress.bar` convenience method with block support and auto-finish
+- `Progress.spin` convenience method with block support
+- `Progress.each` for iterating enumerables with progress display
 - TTY detection to auto-disable rendering in non-terminal environments

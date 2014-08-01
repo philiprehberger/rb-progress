@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'stringio'
 require 'philiprehberger/progress'
 
 RSpec.configure do |config|
@@ -12,8 +13,6 @@ RSpec.configure do |config|
   end
 
   config.shared_context_metadata_behavior = :apply_to_host_groups
-  config.filter_run_when_matching :focus
-  config.disable_monkey_patching!
   config.order = :random
   Kernel.srand config.seed
 end
