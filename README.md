@@ -1,6 +1,7 @@
 # philiprehberger-progress
 
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-progress.svg)](https://badge.fury.io/rb/philiprehberger-progress)
+$badge_line
 [![CI](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml)
 
 Terminal progress bars and spinners with ETA calculation and throughput display.
