@@ -15,7 +15,7 @@ Terminal progress bars and spinners with ETA calculation and throughput display
 Add to your Gemfile:
 
 ```ruby
-gem 'philiprehberger-progress'
+gem "philiprehberger-progress"
 ```
 
 Or install directly:
