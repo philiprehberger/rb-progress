@@ -333,9 +333,7 @@ RSpec.describe Philiprehberger::Progress do
   describe '.spin auto-stop' do
     it 'auto-stops the spinner when block does not stop it' do
       output = StringIO.new
-      described_class.spin('Processing', output: output) do |s|
-        s.spin
-      end
+      described_class.spin('Processing', output: output, &:spin)
       # block ended without stopping; spinner should be auto-stopped
     end
   end
@@ -496,7 +494,7 @@ RSpec.describe Philiprehberger::Progress do
       it 'starts with a frame character' do
         spinner = described_class.new(message: 'test', output: output)
         frames = Philiprehberger::Progress::Spinner::FRAMES
-        expect(frames).to include(spinner.to_s.split(' ').first)
+        expect(frames).to include(spinner.to_s.split.first)
       end
     end
 
@@ -611,7 +609,7 @@ RSpec.describe Philiprehberger::Progress do
         bar = described_class.new(total: 10, output: output)
         bar.advance(5)
         str = bar.to_s
-        expect(str).to match(/\[.+\]\s+\d+\.\d+%\s+\|\s+\d+\/\d+\s+\|\s+ETA:\s+\S+\s+\|\s+\S+\/s/)
+        expect(str).to match(%r{\[.+\]\s+\d+\.\d+%\s+\|\s+\d+/\d+\s+\|\s+ETA:\s+\S+\s+\|\s+\S+/s})
       end
     end
 
