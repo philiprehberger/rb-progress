@@ -700,4 +700,97 @@ RSpec.describe Philiprehberger::Progress do
       expect(result).to eq([1, 2, 3, 4])
     end
   end
+
+  describe Philiprehberger::Progress::Multi do
+    let(:output) { StringIO.new }
+    let(:multi) { described_class.new(output: output) }
+
+    describe '#add' do
+      it 'creates a bar with the given label and total' do
+        bar = multi.add('Downloads', total: 100)
+        expect(bar).to be_a(Philiprehberger::Progress::Bar)
+      end
+
+      it 'stores bars by label' do
+        multi.add('A', total: 10)
+        multi.add('B', total: 20)
+        expect(multi.labels).to eq(%w[A B])
+      end
+    end
+
+    describe '#[]' do
+      it 'retrieves a bar by label' do
+        bar = multi.add('Files', total: 50)
+        expect(multi['Files']).to eq(bar)
+      end
+
+      it 'returns nil for unknown label' do
+        expect(multi['missing']).to be_nil
+      end
+    end
+
+    describe '#finished?' do
+      it 'returns false when empty' do
+        expect(multi.finished?).to be false
+      end
+
+      it 'returns false when bars are incomplete' do
+        multi.add('A', total: 10)
+        expect(multi.finished?).to be false
+      end
+
+      it 'returns true when all bars are finished' do
+        bar1 = multi.add('A', total: 1)
+        bar2 = multi.add('B', total: 1)
+        bar1.advance.finish
+        bar2.advance.finish
+        expect(multi.finished?).to be true
+      end
+
+      it 'returns false when some bars are incomplete' do
+        bar1 = multi.add('A', total: 1)
+        multi.add('B', total: 1)
+        bar1.advance.finish
+        expect(multi.finished?).to be false
+      end
+    end
+
+    describe '#bars' do
+      it 'returns a copy of bars hash' do
+        multi.add('A', total: 10)
+        bars = multi.bars
+        expect(bars).to have_key('A')
+        expect(bars).not_to equal(multi.bars)
+      end
+    end
+
+    describe '#reset' do
+      it 'clears all bars' do
+        multi.add('A', total: 10)
+        multi.reset
+        expect(multi.labels).to be_empty
+        expect(multi.bars).to be_empty
+      end
+    end
+
+    describe '.multi convenience method' do
+      it 'creates a Multi instance' do
+        m = Philiprehberger::Progress.multi(output: output)
+        expect(m).to be_a(described_class)
+      end
+
+      it 'yields the Multi instance in block form' do
+        Philiprehberger::Progress.multi(output: output) do |m|
+          expect(m).to be_a(described_class)
+        end
+      end
+
+      it 'returns the Multi instance from block' do
+        result = Philiprehberger::Progress.multi(output: output) do |m|
+          m.add('A', total: 5)
+        end
+        expect(result.labels).to eq(['A'])
+      end
+    end
+  end
 end

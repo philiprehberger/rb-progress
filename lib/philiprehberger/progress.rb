@@ -3,6 +3,7 @@
 require_relative 'progress/version'
 require_relative 'progress/bar'
 require_relative 'progress/spinner'
+require_relative 'progress/multi'
 
 module Philiprehberger
   module Progress
@@ -27,6 +28,16 @@ module Philiprehberger
         result
       else
         spinner
+      end
+    end
+
+    def self.multi(output: $stderr)
+      m = Multi.new(output: output)
+      if block_given?
+        yield m
+        m
+      else
+        m
       end
     end
 

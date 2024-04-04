@@ -77,6 +77,22 @@ Philiprehberger::Progress.each(items) do |item|
 end
 ```
 
+### Multi-bar
+
+```ruby
+require "philiprehberger/progress"
+
+multi = Philiprehberger::Progress.multi do |m|
+  downloads = m.add("Downloads", total: 100)
+  uploads   = m.add("Uploads", total: 50)
+
+  100.times { downloads.advance }
+  50.times { uploads.advance }
+end
+
+multi.finished?  # => true
+```
+
 ## API
 
 ### `Philiprehberger::Progress::Bar`
@@ -103,12 +119,26 @@ end
 | `#stopped?` | Whether the spinner is stopped |
 | `#to_s` | Render the current frame with message |
 
+### `Philiprehberger::Progress::Multi`
+
+| Method | Description |
+|--------|-------------|
+| `Multi.new(output: $stderr)` | Create multi-bar tracker |
+| `Multi#add(label, total:, width: 30)` | Add a named progress bar |
+| `Multi#[](label)` | Retrieve a bar by label |
+| `Multi#labels` | List of bar labels in order |
+| `Multi#bars` | Hash of label to bar |
+| `Multi#finished?` | True when all bars are finished |
+| `Multi#render` | Render all bars to output |
+| `Multi#reset` | Clear all bars |
+
 ### Module Methods
 
 | Method | Description |
 |--------|-------------|
 | `Progress.bar(total:, &block)` | Create bar, auto-finish after block |
 | `Progress.spin(message, &block)` | Create spinner, auto-stop after block |
+| `Progress.multi(output: $stderr, &block)` | Create multi-bar tracker |
 | `Progress.each(enumerable, label: nil) { \|item\| }` | Iterate with progress |
 
 ## Development
