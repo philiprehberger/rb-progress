@@ -68,6 +68,19 @@ Philiprehberger::Progress.spin('Processing...') do |spinner|
 end
 ```
 
+### Auto-spinning
+
+Start a background thread that animates the spinner automatically:
+
+```ruby
+Philiprehberger::Progress.spin("Deploying...") do |spinner|
+  spinner.auto_spin
+  deploy!  # spinner animates while you work
+end
+```
+
+The thread is joined automatically when `stop` is called (or when the block completes).
+
 ### Enumerable Integration
 
 ```ruby
@@ -75,6 +88,15 @@ items = (1..100).to_a
 Philiprehberger::Progress.each(items) do |item|
   sleep(0.01)
 end
+```
+
+### Mapping with Progress
+
+Transform items while displaying progress:
+
+```ruby
+results = Philiprehberger::Progress.map(urls) { |url| fetch(url) }
+# results contains the return values from each block call
 ```
 
 ### Multi-bar
@@ -115,7 +137,8 @@ multi.finished?  # => true
 |--------|-------------|
 | `.new(message:, output: $stderr)` | Create a spinner |
 | `#spin` | Advance to the next frame |
-| `#stop(final_message = 'done')` | Stop with a message |
+| `#auto_spin(interval: 0.1)` | Start background thread animation |
+| `#stop(final_message = 'done')` | Stop with a message (joins background thread) |
 | `#stopped?` | Whether the spinner is stopped |
 | `#to_s` | Render the current frame with message |
 
@@ -140,6 +163,7 @@ multi.finished?  # => true
 | `Progress.spin(message, &block)` | Create spinner, auto-stop after block |
 | `Progress.multi(output: $stderr, &block)` | Create multi-bar tracker |
 | `Progress.each(enumerable, label: nil) { \|item\| }` | Iterate with progress |
+| `Progress.map(enumerable, label: nil) { \|item\| }` | Transform with progress, returns results |
 
 ## Development
 

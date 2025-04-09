@@ -7,6 +7,15 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-09
+
+### Added
+- `Spinner#auto_spin(interval: 0.1)` starts a background thread that animates the spinner until `stop` is called
+- `Progress.map(enumerable) { |item| ... }` transforms items with a progress bar, returning the collected results
+
+### Fixed
+- Gemspec `required_ruby_version` format to `'>= 3.1.0'` (was `'>= 3.1'`)
+
 ## [0.2.0] - 2026-04-04
 
 ### Added
@@ -83,3 +92,17 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `Progress.spin` convenience method with block support
 - `Progress.each` for iterating enumerables with progress display
 - TTY detection to auto-disable rendering in non-terminal environments
+
+[0.3.0]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.3.0
+[0.2.0]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.2.0
+[0.1.11]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.11
+[0.1.10]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.10
+[0.1.9]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.9
+[0.1.8]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.8
+[0.1.7]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.7
+[0.1.6]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.6
+[0.1.5]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.5
+[0.1.4]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.4
+[0.1.3]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.3
+[0.1.2]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.2
+[0.1.0]: https://github.com/philiprehberger/rb-progress/releases/tag/v0.1.0
