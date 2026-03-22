@@ -1,10 +1,9 @@
 # philiprehberger-progress
 
-[![Tests](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml)
-[![Gem Version](https://badge.fury.io/rb/philiprehberger-progress.svg)](https://rubygems.org/gems/philiprehberger-progress)
-[![License](https://img.shields.io/github/license/philiprehberger/rb-progress)](LICENSE)
+[![Gem Version](https://badge.fury.io/rb/philiprehberger-progress.svg)](https://badge.fury.io/rb/philiprehberger-progress)
+[![CI](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml)
 
-Terminal progress bars and spinners with ETA calculation and throughput display
+Terminal progress bars and spinners with ETA calculation and throughput display.
 
 ## Requirements
 
@@ -12,16 +11,14 @@ Terminal progress bars and spinners with ETA calculation and throughput display
 
 ## Installation
 
-Add to your Gemfile:
+```sh
+gem install philiprehberger-progress
+```
+
+Or add to your Gemfile:
 
 ```ruby
 gem 'philiprehberger-progress'
-```
-
-Or install directly:
-
-```bash
-gem install philiprehberger-progress
 ```
 
 ## Usage
@@ -31,34 +28,40 @@ gem install philiprehberger-progress
 ```ruby
 require 'philiprehberger/progress'
 
-Philiprehberger::Progress.bar(total: 100) do |bar|
-  100.times do
-    sleep(0.01)
-    bar.advance
-  end
+bar = Philiprehberger::Progress::Bar.new(total: 100)
+100.times do
+  sleep(0.01)
+  bar.advance
 end
+bar.finish
+# [████████████████████████████████] 100.0% | 100/100 | ETA: 0s | 100.0/s
 ```
 
-### Custom Format
+### Block Usage
 
 ```ruby
-bar = Philiprehberger::Progress::Bar.new(
-  total: 100,
-  format: ':bar :percent | :current/:total | :rate items/s | ETA: :eta',
-  width: 30
-)
-bar.advance(50)
-puts bar.to_s
+Philiprehberger::Progress.bar(total: 100) do |bar|
+  100.times { bar.advance }
+end
+# Auto-finishes when block completes
 ```
 
 ### Spinner
 
 ```ruby
-Philiprehberger::Progress.spin('Loading...') do |spinner|
-  10.times do
-    sleep(0.1)
-    spinner.spin
-  end
+spinner = Philiprehberger::Progress::Spinner.new(message: 'Loading...')
+10.times do
+  sleep(0.1)
+  spinner.spin
+end
+spinner.stop('done')
+```
+
+### Block Spinner
+
+```ruby
+Philiprehberger::Progress.spin('Processing...') do |spinner|
+  10.times { spinner.spin; sleep(0.1) }
 end
 ```
 
@@ -66,75 +69,53 @@ end
 
 ```ruby
 items = (1..100).to_a
-items.each_with_progress('Processing') do |item|
+Philiprehberger::Progress.each(items) do |item|
   sleep(0.01)
 end
 ```
 
-### Multi-Bar
-
-```ruby
-multi = Philiprehberger::Progress.multi
-bar1 = multi.bar('Downloads', total: 100)
-bar2 = multi.bar('Uploads', total: 50)
-
-bar1.advance(10)
-bar2.advance(5)
-multi.render
-```
-
 ## API
-
-### `Philiprehberger::Progress`
-
-| Method | Description |
-|--------|-------------|
-| `.bar(total:, format:, width:)` | Create a progress bar (yields if block given) |
-| `.spin(message, frames:)` | Create a spinner (yields if block given) |
-| `.multi` | Create a multi-bar display |
 
 ### `Philiprehberger::Progress::Bar`
 
 | Method | Description |
 |--------|-------------|
-| `.new(total:, format:, width:)` | Create a progress bar |
-| `#advance(n)` | Advance by `n` items (default: 1) |
+| `.new(total:, width: 30, output: $stderr)` | Create a progress bar |
+| `#advance(n = 1)` | Advance by `n` items |
 | `#finish` | Mark as complete |
 | `#finished?` | Whether the bar is finished |
 | `#percentage` | Current percentage (0.0 to 100.0) |
 | `#elapsed` | Elapsed time in seconds |
 | `#eta` | Estimated time remaining in seconds |
-| `#rate` | Throughput in items per second |
+| `#throughput` | Items per second |
 | `#to_s` | Render the bar as a string |
 
 ### `Philiprehberger::Progress::Spinner`
 
 | Method | Description |
 |--------|-------------|
-| `.new(message:, frames:)` | Create a spinner |
+| `.new(message:, output: $stderr)` | Create a spinner |
 | `#spin` | Advance to the next frame |
-| `#done(message)` | Mark as done with optional message |
-| `#done?` | Whether the spinner is done |
-| `#to_s` | Render the current frame |
+| `#stop(final_message = 'done')` | Stop with a message |
+| `#stopped?` | Whether the spinner is stopped |
+| `#to_s` | Render the current frame with message |
 
-### `Philiprehberger::Progress::Multi`
+### Module Methods
 
 | Method | Description |
 |--------|-------------|
-| `.new` | Create a multi-bar display |
-| `#bar(label, total:)` | Add a new progress bar |
-| `#render` | Render all bars |
-| `#size` | Number of bars |
-| `#finished?` | Whether all bars are finished |
+| `Progress.bar(total:, &block)` | Create bar, auto-finish after block |
+| `Progress.spin(message, &block)` | Create spinner, auto-stop after block |
+| `Progress.each(enumerable, label: nil) { \|item\| }` | Iterate with progress |
 
 ## Development
 
-```bash
+```sh
 bundle install
-bundle exec rspec      # Run tests
-bundle exec rubocop    # Check code style
+bundle exec rspec
+bundle exec rubocop
 ```
 
 ## License
 
-MIT
+MIT License. See [LICENSE](LICENSE) for details.

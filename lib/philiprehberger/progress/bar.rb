@@ -2,29 +2,14 @@
 
 module Philiprehberger
   module Progress
-    # A terminal progress bar with ETA and throughput display
-    #
-    # @example
-    #   bar = Bar.new(total: 100)
-    #   100.times { bar.advance }
-    #   bar.finish
     class Bar
-      DEFAULT_FORMAT = ':bar :percent | :current/:total | :rate items/s | ETA: :eta'
-      DEFAULT_WIDTH = 30
       FILL_CHAR = "\u2588"
       EMPTY_CHAR = "\u2591"
 
       attr_reader :current, :total
 
-      # Create a new progress bar
-      #
-      # @param total [Integer] total number of items
-      # @param format [String] format string with placeholders
-      # @param width [Integer] width of the bar portion in characters
-      # @param output [IO] output stream (default: $stderr)
-      def initialize(total:, format: DEFAULT_FORMAT, width: DEFAULT_WIDTH, output: $stderr)
+      def initialize(total:, width: 30, output: $stderr)
         @total = [total, 0].max
-        @format = format
         @width = width
         @output = output
         @current = 0
@@ -32,87 +17,59 @@ module Philiprehberger
         @finished = false
       end
 
-      # Advance the progress bar
-      #
-      # @param n [Integer] number of items to advance (default: 1)
-      # @return [self]
       def advance(n = 1)
         return self if @finished
 
         @current = [@current + n, @total].min
-        render if tty?
+        render_to_output
         self
       end
 
-      # Mark the progress as complete
-      #
-      # @return [self]
       def finish
         @current = @total
         @finished = true
-        render if tty?
+        render_to_output
         @output.write("\n") if tty?
         self
       end
 
-      # Check if the progress is finished
-      #
-      # @return [Boolean]
       def finished?
         @finished
       end
 
-      # Get the progress percentage
-      #
-      # @return [Float] percentage from 0.0 to 100.0
       def percentage
         return 100.0 if @total.zero?
 
         (@current.to_f / @total * 100).round(1)
       end
 
-      # Get the elapsed time in seconds
-      #
-      # @return [Float]
       def elapsed
         now - @start_time
       end
 
-      # Get the estimated time remaining in seconds
-      #
-      # @return [Float, nil] nil if no progress has been made
       def eta
         return 0.0 if @current >= @total
         return nil if @current.zero?
 
         elapsed_time = elapsed
-        rate = @current.to_f / elapsed_time
-        (@total - @current) / rate
+        items_per_sec = @current.to_f / elapsed_time
+        (@total - @current) / items_per_sec
       end
 
-      # Get the throughput in items per second
-      #
-      # @return [Float]
-      def rate
+      def throughput
         elapsed_time = elapsed
         return 0.0 if elapsed_time.zero?
 
         @current.to_f / elapsed_time
       end
 
-      # Render the progress bar as a string
-      #
-      # @return [String]
       def to_s
-        result = @format.dup
-        result.gsub!(':bar', render_bar)
-        result.gsub!(':percent', format('%<pct>5.1f%%', pct: percentage))
-        result.gsub!(':current', @current.to_s)
-        result.gsub!(':total', @total.to_s)
-        result.gsub!(':rate', format('%<r>.1f', r: rate))
-        result.gsub!(':eta', format_duration(eta))
-        result.gsub!(':elapsed', format_duration(elapsed))
-        result
+        bar_str = render_bar
+        pct = format('%<p>5.1f%%', p: percentage)
+        eta_str = format_eta(eta)
+        tput = format('%<t>.1f/s', t: throughput)
+
+        "[#{bar_str}] #{pct} | #{@current}/#{@total} | ETA: #{eta_str} | #{tput}"
       end
 
       private
@@ -125,8 +82,8 @@ module Philiprehberger
         @output.respond_to?(:tty?) && @output.tty?
       end
 
-      def render
-        @output.write("\r#{self}")
+      def render_to_output
+        @output.write("\r#{self}") if tty?
       end
 
       def render_bar
@@ -137,16 +94,18 @@ module Philiprehberger
         (FILL_CHAR * filled) + (EMPTY_CHAR * empty)
       end
 
-      def format_duration(seconds)
-        return '--:--' if seconds.nil? || seconds.negative?
+      def format_eta(seconds)
+        return '--:--' if seconds.nil?
 
-        seconds = seconds.to_i
-        if seconds < 60
-          format('0:%02d', seconds)
-        elsif seconds < 3600
-          format('%d:%02d', seconds / 60, seconds % 60)
+        secs = seconds.to_i
+        return '0s' if secs <= 0
+
+        if secs < 60
+          "#{secs}s"
+        elsif secs < 3600
+          format('%dm%02ds', secs / 60, secs % 60)
         else
-          format('%d:%02d:%02d', seconds / 3600, (seconds % 3600) / 60, seconds % 60)
+          format('%dh%02dm%02ds', secs / 3600, (secs % 3600) / 60, secs % 60)
         end
       end
     end
