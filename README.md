@@ -4,7 +4,7 @@
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-progress.svg)](https://rubygems.org/gems/philiprehberger-progress)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-progress)](LICENSE)
 
-Terminal progress bars and spinners with ETA calculation and throughput display.
+Terminal progress bars and spinners with ETA calculation and throughput display
 
 ## Requirements
 
@@ -12,14 +12,16 @@ Terminal progress bars and spinners with ETA calculation and throughput display.
 
 ## Installation
 
-```sh
-gem install philiprehberger-progress
-```
-
-Or add to your Gemfile:
+Add to your Gemfile:
 
 ```ruby
 gem 'philiprehberger-progress'
+```
+
+Or install directly:
+
+```bash
+gem install philiprehberger-progress
 ```
 
 ## Usage
@@ -111,7 +113,7 @@ end
 
 ## Development
 
-```sh
+```bash
 bundle install
 bundle exec rspec
 bundle exec rubocop
@@ -119,4 +121,4 @@ bundle exec rubocop
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT
