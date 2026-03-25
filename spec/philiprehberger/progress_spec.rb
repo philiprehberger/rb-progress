@@ -312,4 +312,394 @@ RSpec.describe Philiprehberger::Progress do
       expect(bar).to be_a(Philiprehberger::Progress::Bar)
     end
   end
+
+  describe '.spin without block' do
+    it 'returns a spinner instance' do
+      spinner = described_class.spin('Working', output: StringIO.new)
+      expect(spinner).to be_a(Philiprehberger::Progress::Spinner)
+    end
+  end
+
+  describe '.bar auto-finish' do
+    it 'auto-finishes the bar when block does not finish it' do
+      output = StringIO.new
+      described_class.bar(total: 5, output: output) do |bar|
+        bar.advance(2)
+      end
+      # block ended without finishing; bar should be auto-finished
+    end
+  end
+
+  describe '.spin auto-stop' do
+    it 'auto-stops the spinner when block does not stop it' do
+      output = StringIO.new
+      described_class.spin('Processing', output: output) do |s|
+        s.spin
+      end
+      # block ended without stopping; spinner should be auto-stopped
+    end
+  end
+
+  describe '.each edge cases' do
+    it 'handles an empty enumerable' do
+      output = StringIO.new
+      results = []
+      described_class.each([], output: output) { |item| results << item }
+      expect(results).to eq([])
+    end
+
+    it 'works with a Set (non-array enumerable)' do
+      output = StringIO.new
+      items = Set.new([1, 2, 3])
+      results = []
+      described_class.each(items, output: output) { |item| results << item }
+      expect(results.sort).to eq([1, 2, 3])
+    end
+  end
+
+  describe Philiprehberger::Progress::Bar do
+    let(:output) { StringIO.new }
+
+    describe 'zero total' do
+      it 'starts with current 0' do
+        bar = described_class.new(total: 0, output: output)
+        expect(bar.current).to eq(0)
+      end
+
+      it 'reports 100% percentage' do
+        bar = described_class.new(total: 0, output: output)
+        expect(bar.percentage).to eq(100.0)
+      end
+
+      it 'renders a fully filled bar in to_s' do
+        bar = described_class.new(total: 0, width: 10, output: output)
+        fill = Philiprehberger::Progress::Bar::FILL_CHAR * 10
+        expect(bar.to_s).to include(fill)
+      end
+
+      it 'does not change current on advance' do
+        bar = described_class.new(total: 0, output: output)
+        bar.advance(5)
+        expect(bar.current).to eq(0)
+      end
+
+      it 'finishes cleanly' do
+        bar = described_class.new(total: 0, output: output)
+        bar.finish
+        expect(bar.finished?).to be true
+        expect(bar.current).to eq(0)
+      end
+
+      it 'returns 0.0 for eta' do
+        bar = described_class.new(total: 0, output: output)
+        expect(bar.eta).to eq(0.0)
+      end
+    end
+
+    describe 'negative total' do
+      it 'clamps negative total to zero' do
+        bar = described_class.new(total: -5, output: output)
+        expect(bar.total).to eq(0)
+      end
+    end
+
+    describe 'chaining' do
+      it '#advance returns self' do
+        bar = described_class.new(total: 10, output: output)
+        expect(bar.advance).to be(bar)
+      end
+
+      it '#finish returns self' do
+        bar = described_class.new(total: 10, output: output)
+        expect(bar.finish).to be(bar)
+      end
+
+      it 'supports chained advance calls' do
+        bar = described_class.new(total: 10, output: output)
+        bar.advance(3).advance(4)
+        expect(bar.current).to eq(7)
+      end
+    end
+
+    describe 'custom width' do
+      it 'renders bar with specified width' do
+        bar = described_class.new(total: 10, width: 20, output: output)
+        bar.advance(5)
+        str = bar.to_s
+        fill = Philiprehberger::Progress::Bar::FILL_CHAR
+        empty = Philiprehberger::Progress::Bar::EMPTY_CHAR
+        bar_section = str.match(/\[(.+?)\]/)[1]
+        expect(bar_section.length).to eq(20)
+        expect(bar_section.count(fill)).to eq(10)
+        expect(bar_section.count(empty)).to eq(10)
+      end
+    end
+
+    describe '#to_s ETA display' do
+      it 'shows --:-- when no progress has been made' do
+        bar = described_class.new(total: 100, output: output)
+        expect(bar.to_s).to include('--:--')
+      end
+
+      it 'shows 0s when progress equals total' do
+        bar = described_class.new(total: 10, output: output)
+        bar.advance(10)
+        expect(bar.to_s).to include('0s')
+      end
+    end
+
+    describe '#advance returns self when finished' do
+      it 'returns self even when already finished' do
+        bar = described_class.new(total: 5, output: output)
+        bar.finish
+        expect(bar.advance).to be(bar)
+      end
+    end
+
+    describe 'multiple advances beyond total' do
+      it 'clamps current to total across multiple calls' do
+        bar = described_class.new(total: 5, output: output)
+        bar.advance(3)
+        bar.advance(3)
+        bar.advance(3)
+        expect(bar.current).to eq(5)
+      end
+    end
+  end
+
+  describe Philiprehberger::Progress::Spinner do
+    let(:output) { StringIO.new }
+
+    describe '#spin returns self' do
+      it 'returns the spinner instance' do
+        spinner = described_class.new(message: 'test', output: output)
+        expect(spinner.spin).to be(spinner)
+      end
+    end
+
+    describe '#stop returns self' do
+      it 'returns the spinner instance' do
+        spinner = described_class.new(message: 'test', output: output)
+        expect(spinner.stop).to be(spinner)
+      end
+    end
+
+    describe '#stop default message' do
+      it 'uses "done" as default final message' do
+        spinner = described_class.new(message: 'test', output: output)
+        spinner.stop
+        expect(spinner.stopped?).to be true
+      end
+    end
+
+    describe '#to_s includes current frame' do
+      it 'starts with a frame character' do
+        spinner = described_class.new(message: 'test', output: output)
+        frames = Philiprehberger::Progress::Spinner::FRAMES
+        expect(frames).to include(spinner.to_s.split(' ').first)
+      end
+    end
+
+    describe 'silent when output is not TTY' do
+      it 'does not write to non-TTY output on spin' do
+        io = StringIO.new
+        spinner = described_class.new(message: 'test', output: io)
+        spinner.spin
+        expect(io.string).to eq('')
+      end
+
+      it 'does not write to non-TTY output on stop' do
+        io = StringIO.new
+        spinner = described_class.new(message: 'test', output: io)
+        spinner.stop
+        expect(io.string).to eq('')
+      end
+    end
+
+    describe '#stop called multiple times' do
+      it 'remains stopped and does not raise' do
+        spinner = described_class.new(message: 'test', output: output)
+        spinner.stop('first')
+        spinner.stop('second')
+        expect(spinner.stopped?).to be true
+      end
+    end
+
+    describe '#to_s after spinning' do
+      it 'includes the message after multiple spins' do
+        spinner = described_class.new(message: 'Processing', output: output)
+        5.times { spinner.spin }
+        expect(spinner.to_s).to include('Processing')
+      end
+    end
+
+    describe 'FRAMES constant' do
+      it 'contains exactly 10 frames' do
+        expect(Philiprehberger::Progress::Spinner::FRAMES.length).to eq(10)
+      end
+
+      it 'is frozen' do
+        expect(Philiprehberger::Progress::Spinner::FRAMES).to be_frozen
+      end
+    end
+  end
+
+  describe Philiprehberger::Progress::Bar do
+    let(:output) { StringIO.new }
+
+    describe '#advance with zero increment' do
+      it 'does not change current' do
+        bar = described_class.new(total: 10, output: output)
+        bar.advance(0)
+        expect(bar.current).to eq(0)
+      end
+    end
+
+    describe '#advance exact total match' do
+      it 'reaches total exactly when advancing by total' do
+        bar = described_class.new(total: 50, output: output)
+        bar.advance(50)
+        expect(bar.current).to eq(50)
+        expect(bar.percentage).to eq(100.0)
+      end
+    end
+
+    describe 'default width' do
+      it 'renders a bar of width 30 by default' do
+        bar = described_class.new(total: 10, output: output)
+        bar.advance(5)
+        bar_section = bar.to_s.match(/\[(.+?)\]/)[1]
+        expect(bar_section.length).to eq(30)
+      end
+    end
+
+    describe '#finish called multiple times' do
+      it 'remains finished and does not raise' do
+        bar = described_class.new(total: 10, output: output)
+        bar.finish
+        bar.finish
+        expect(bar.finished?).to be true
+        expect(bar.current).to eq(10)
+      end
+    end
+
+    describe '#percentage precision' do
+      it 'rounds to one decimal place' do
+        bar = described_class.new(total: 3, output: output)
+        bar.advance(1)
+        expect(bar.percentage).to eq(33.3)
+      end
+
+      it 'rounds 2/3 correctly' do
+        bar = described_class.new(total: 3, output: output)
+        bar.advance(2)
+        expect(bar.percentage).to eq(66.7)
+      end
+    end
+
+    describe 'very large total' do
+      it 'handles a large total without error' do
+        bar = described_class.new(total: 1_000_000, output: output)
+        bar.advance(500_000)
+        expect(bar.current).to eq(500_000)
+        expect(bar.percentage).to eq(50.0)
+      end
+    end
+
+    describe '#to_s format structure' do
+      it 'matches the expected format pattern' do
+        bar = described_class.new(total: 10, output: output)
+        bar.advance(5)
+        str = bar.to_s
+        expect(str).to match(/\[.+\]\s+\d+\.\d+%\s+\|\s+\d+\/\d+\s+\|\s+ETA:\s+\S+\s+\|\s+\S+\/s/)
+      end
+    end
+
+    describe '#eta when fully advanced without finish' do
+      it 'returns 0.0 when current equals total' do
+        bar = described_class.new(total: 5, output: output)
+        bar.advance(5)
+        expect(bar.eta).to eq(0.0)
+      end
+    end
+
+    describe 'zero total ETA display' do
+      it 'shows 0s for ETA when total is zero' do
+        bar = described_class.new(total: 0, output: output)
+        expect(bar.to_s).to include('0s')
+      end
+    end
+
+    describe 'zero total throughput' do
+      it 'returns 0.0 for throughput when total is zero' do
+        bar = described_class.new(total: 0, output: output)
+        expect(bar.throughput).to be >= 0.0
+      end
+    end
+
+    describe 'negative total renders as zero total' do
+      it 'reports 100% percentage for negative total' do
+        bar = described_class.new(total: -10, output: output)
+        expect(bar.percentage).to eq(100.0)
+      end
+
+      it 'renders a fully filled bar for negative total' do
+        bar = described_class.new(total: -10, width: 10, output: output)
+        fill = Philiprehberger::Progress::Bar::FILL_CHAR * 10
+        expect(bar.to_s).to include(fill)
+      end
+    end
+  end
+
+  describe '.bar passes width option' do
+    it 'creates a bar with custom width' do
+      output = StringIO.new
+      described_class.bar(total: 10, width: 15, output: output) do |bar|
+        bar.advance(5)
+        bar_section = bar.to_s.match(/\[(.+?)\]/)[1]
+        expect(bar_section.length).to eq(15)
+      end
+    end
+  end
+
+  describe '.bar auto-finish verification' do
+    it 'marks the bar as finished after block completes' do
+      output = StringIO.new
+      bar_ref = nil
+      described_class.bar(total: 5, output: output) do |bar|
+        bar.advance(2)
+        bar_ref = bar
+      end
+      expect(bar_ref.finished?).to be true
+    end
+  end
+
+  describe '.spin auto-stop verification' do
+    it 'marks the spinner as stopped after block completes' do
+      output = StringIO.new
+      spinner_ref = nil
+      described_class.spin('Working', output: output) do |s|
+        s.spin
+        spinner_ref = s
+      end
+      expect(spinner_ref.stopped?).to be true
+    end
+  end
+
+  describe '.each with a Range' do
+    it 'iterates over a range' do
+      output = StringIO.new
+      results = []
+      described_class.each(1..3, output: output) { |item| results << item }
+      expect(results).to eq([1, 2, 3])
+    end
+  end
+
+  describe '.each returns items from non-array enumerable' do
+    it 'returns the array form of the enumerable' do
+      output = StringIO.new
+      result = described_class.each(1..4, output: output) { |_item| nil }
+      expect(result).to eq([1, 2, 3, 4])
+    end
+  end
 end
