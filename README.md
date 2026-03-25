@@ -29,7 +29,7 @@ gem install philiprehberger-progress
 ### Progress Bar
 
 ```ruby
-require 'philiprehberger/progress'
+require "philiprehberger/progress"
 
 bar = Philiprehberger::Progress::Bar.new(total: 100)
 100.times do
