@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-progress/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-progress.svg)](https://rubygems.org/gems/philiprehberger-progress)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-progress)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Terminal progress bars and spinners with ETA calculation and throughput display
 
@@ -121,4 +122,4 @@ bundle exec rubocop
 
 ## License
 
-MIT
+[MIT](LICENSE)
