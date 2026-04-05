@@ -5,8 +5,8 @@ require_relative 'lib/philiprehberger/progress/version'
 Gem::Specification.new do |spec|
   spec.name = 'philiprehberger-progress'
   spec.version = Philiprehberger::Progress::VERSION
-  spec.authors = ['philiprehberger']
-  spec.email = ['philiprehberger@users.noreply.github.com']
+  spec.authors = ['Philip Rehberger']
+  spec.email = ['me@philiprehberger.com']
 
   spec.summary = 'Terminal progress bars and spinners with ETA calculation and throughput display'
   spec.description = 'Display progress bars with percentage, ETA, and throughput, or spinners for ' \
