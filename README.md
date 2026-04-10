@@ -123,6 +123,8 @@ multi.finished?  # => true
 |--------|-------------|
 | `.new(total:, width: 30, output: $stderr)` | Create a progress bar |
 | `#advance(n = 1)` | Advance by `n` items |
+| `#set(n)` | Set absolute progress position (clamped to 0..total) |
+| `#reset` | Reset to 0, clear finished state, restart timer |
 | `#finish` | Mark as complete |
 | `#finished?` | Whether the bar is finished |
 | `#percentage` | Current percentage (0.0 to 100.0) |
@@ -136,6 +138,7 @@ multi.finished?  # => true
 | Method | Description |
 |--------|-------------|
 | `.new(message:, output: $stderr)` | Create a spinner |
+| `#message=` | Update the spinner message dynamically |
 | `#spin` | Advance to the next frame |
 | `#auto_spin(interval: 0.1)` | Start background thread animation |
 | `#stop(final_message = 'done')` | Stop with a message (joins background thread) |

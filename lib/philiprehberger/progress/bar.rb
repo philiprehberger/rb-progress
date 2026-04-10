@@ -25,6 +25,28 @@ module Philiprehberger
         self
       end
 
+      # Set absolute progress position.
+      #
+      # @param n [Integer] the new current value (clamped to 0..total)
+      # @return [self]
+      def set(n)
+        return self if @finished
+
+        @current = [[n, 0].max, @total].min
+        render_to_output
+        self
+      end
+
+      # Reset the bar to 0, preserving total and width. Restarts the timer.
+      #
+      # @return [self]
+      def reset
+        @current = 0
+        @finished = false
+        @start_time = now
+        self
+      end
+
       def finish
         @current = @total
         @finished = true

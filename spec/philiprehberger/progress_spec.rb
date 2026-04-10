@@ -842,4 +842,79 @@ RSpec.describe Philiprehberger::Progress do
       expect(processed).to eq([1, 2, 3])
     end
   end
+
+  describe 'Bar#set' do
+    it 'sets absolute progress position' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.set(42)
+      expect(bar.current).to eq(42)
+    end
+
+    it 'clamps to total' do
+      bar = Philiprehberger::Progress::Bar.new(total: 50, output: output)
+      bar.set(999)
+      expect(bar.current).to eq(50)
+    end
+
+    it 'clamps to zero for negative values' do
+      bar = Philiprehberger::Progress::Bar.new(total: 50, output: output)
+      bar.set(-5)
+      expect(bar.current).to eq(0)
+    end
+
+    it 'returns self for chaining' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      expect(bar.set(5)).to be(bar)
+    end
+
+    it 'does not change after finish' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.finish
+      bar.set(5)
+      expect(bar.current).to eq(10)
+    end
+  end
+
+  describe 'Bar#reset' do
+    it 'resets current to 0' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.advance(50)
+      bar.reset
+      expect(bar.current).to eq(0)
+    end
+
+    it 'clears finished state' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.finish
+      bar.reset
+      expect(bar.finished?).to be(false)
+    end
+
+    it 'allows advance after reset' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.finish
+      bar.reset
+      bar.advance(3)
+      expect(bar.current).to eq(3)
+    end
+
+    it 'returns self for chaining' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      expect(bar.reset).to be(bar)
+    end
+  end
+
+  describe 'Spinner#message=' do
+    it 'updates the message' do
+      spinner = Philiprehberger::Progress::Spinner.new(message: 'Loading...', output: output)
+      spinner.message = 'Saving...'
+      expect(spinner.message).to eq('Saving...')
+    end
+
+    it 'reflects new message in to_s' do
+      spinner = Philiprehberger::Progress::Spinner.new(message: 'Loading...', output: output)
+      spinner.message = 'Done'
+      expect(spinner.to_s).to include('Done')
+    end
+  end
 end
