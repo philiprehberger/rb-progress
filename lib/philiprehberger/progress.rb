@@ -53,5 +53,19 @@ module Philiprehberger
       bar.finish
       items
     end
+
+    def self.map(enumerable, label: nil, output: $stderr)
+      items = enumerable.to_a
+      bar = Bar.new(total: items.length, output: output)
+
+      results = items.map do |item|
+        result = yield item
+        bar.advance
+        result
+      end
+
+      bar.finish
+      results
+    end
   end
 end

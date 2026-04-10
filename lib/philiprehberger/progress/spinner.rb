@@ -23,8 +23,20 @@ module Philiprehberger
         self
       end
 
+      def auto_spin(interval: 0.1)
+        @auto_thread = Thread.new do
+          until @stopped
+            spin
+            sleep(interval)
+          end
+        end
+        self
+      end
+
       def stop(final_message = 'done')
         @stopped = true
+        @auto_thread&.join
+        @auto_thread = nil
         @output.write("\r\e[2K#{final_message}\n") if tty?
         self
       end

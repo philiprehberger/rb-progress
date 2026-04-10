@@ -793,4 +793,53 @@ RSpec.describe Philiprehberger::Progress do
       end
     end
   end
+
+  describe Philiprehberger::Progress::Spinner do
+    let(:output) { StringIO.new }
+
+    describe '#auto_spin' do
+      it 'advances frames in the background' do
+        spinner = described_class.new(message: 'Loading...', output: output)
+        spinner.auto_spin(interval: 0.02)
+        sleep(0.1)
+        spinner.stop
+        expect(spinner.stopped?).to be true
+      end
+
+      it 'returns self for chaining' do
+        spinner = described_class.new(message: 'Loading...', output: output)
+        result = spinner.auto_spin(interval: 0.02)
+        spinner.stop
+        expect(result).to be(spinner)
+      end
+
+      it 'stops cleanly without auto_spin started' do
+        spinner = described_class.new(message: 'Loading...', output: output)
+        expect { spinner.stop }.not_to raise_error
+      end
+    end
+  end
+
+  describe 'Progress.map' do
+    let(:output) { StringIO.new }
+
+    it 'returns mapped results' do
+      results = Philiprehberger::Progress.map([1, 2, 3], output: output) { |v| v * 2 }
+      expect(results).to eq([2, 4, 6])
+    end
+
+    it 'returns empty array for empty input' do
+      results = Philiprehberger::Progress.map([], output: output) { |v| v }
+      expect(results).to eq([])
+    end
+
+    it 'processes all items' do
+      processed = []
+      Philiprehberger::Progress.map([1, 2, 3], output: output) do |v|
+        processed << v
+        v
+      end
+      expect(processed).to eq([1, 2, 3])
+    end
+  end
 end

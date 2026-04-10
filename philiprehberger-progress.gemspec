@@ -10,11 +10,12 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'Terminal progress bars and spinners with ETA calculation and throughput display'
   spec.description = 'Display progress bars with percentage, ETA, and throughput, or spinners for ' \
-                     'indeterminate tasks. Supports block-based usage, enumerable iteration, ' \
-                     'and auto-disables rendering when not connected to a terminal.'
+                     'indeterminate tasks. Supports block-based usage, enumerable iteration with ' \
+                     'each/map, background auto-spinning, multi-bar tracking, and auto-disables ' \
+                     'rendering when not connected to a terminal.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-progress'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.1'
+  spec.required_ruby_version = '>= 3.1.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = 'https://github.com/philiprehberger/rb-progress'
