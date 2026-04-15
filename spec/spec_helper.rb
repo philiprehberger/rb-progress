@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'stringio'
+require 'json'
 require 'philiprehberger/progress'
 
 RSpec.configure do |config|

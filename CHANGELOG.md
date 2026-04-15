@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-14
+
+### Added
+- `Bar#pause` and `Bar#resume` to freeze and unfreeze elapsed time calculation
+- `Bar#to_h` returns a hash with `:percentage`, `:elapsed`, `:eta`, `:throughput`, `:current`, `:total`
+- Custom bar characters via `fill:`, `empty:`, `tip:` keyword arguments (defaults: `fill: '='`, `empty: ' '`, `tip: '>'`)
+- `Progress.json_mode!` and `Progress.text_mode!` to toggle JSON line output for bar rendering
+
 ## [0.4.0] - 2026-04-09
 
 ### Added

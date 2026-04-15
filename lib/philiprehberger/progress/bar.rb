@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 module Philiprehberger
   module Progress
     class Bar
@@ -8,13 +10,19 @@ module Philiprehberger
 
       attr_reader :current, :total
 
-      def initialize(total:, width: 30, output: $stderr)
+      def initialize(total:, width: 30, output: $stderr, fill: '=', empty: ' ', tip: '>')
         @total = [total, 0].max
         @width = width
         @output = output
         @current = 0
         @start_time = now
         @finished = false
+        @paused = false
+        @pause_elapsed = 0.0
+        @pause_start = nil
+        @fill = fill
+        @empty = empty
+        @tip = tip
       end
 
       def advance(n = 1)
@@ -43,8 +51,38 @@ module Philiprehberger
       def reset
         @current = 0
         @finished = false
+        @paused = false
+        @pause_elapsed = 0.0
+        @pause_start = nil
         @start_time = now
         self
+      end
+
+      # Pause the progress bar, freezing elapsed time calculation.
+      #
+      # @return [self]
+      def pause
+        return self if @paused || @finished
+
+        @paused = true
+        @pause_start = now
+        self
+      end
+
+      # Resume after pause.
+      #
+      # @return [self]
+      def resume
+        return self unless @paused
+
+        @pause_elapsed += now - @pause_start
+        @pause_start = nil
+        @paused = false
+        self
+      end
+
+      def paused?
+        @paused
       end
 
       def finish
@@ -66,7 +104,9 @@ module Philiprehberger
       end
 
       def elapsed
-        now - @start_time
+        raw = now - @start_time - @pause_elapsed
+        raw -= (now - @pause_start) if @paused
+        raw
       end
 
       def eta
@@ -85,7 +125,20 @@ module Philiprehberger
         @current.to_f / elapsed_time
       end
 
+      def to_h
+        {
+          percentage: percentage,
+          elapsed: elapsed,
+          eta: eta,
+          throughput: throughput,
+          current: @current,
+          total: @total
+        }
+      end
+
       def to_s
+        return to_h.to_json if Philiprehberger::Progress.json_mode?
+
         bar_str = render_bar
         pct = format('%<p>5.1f%%', p: percentage)
         eta_str = format_eta(eta)
@@ -109,11 +162,16 @@ module Philiprehberger
       end
 
       def render_bar
-        return FILL_CHAR * @width if @total.zero?
+        return @fill * @width if @total.zero?
 
         filled = (@current.to_f / @total * @width).round
         empty = @width - filled
-        (FILL_CHAR * filled) + (EMPTY_CHAR * empty)
+
+        if filled.positive? && filled < @width
+          (@fill * (filled - 1)) + @tip + (@empty * empty)
+        else
+          (@fill * filled) + (@empty * empty)
+        end
       end
 
       def format_eta(seconds)

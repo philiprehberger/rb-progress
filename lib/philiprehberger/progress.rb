@@ -7,8 +7,22 @@ require_relative 'progress/multi'
 
 module Philiprehberger
   module Progress
-    def self.bar(total:, width: 30, output: $stderr)
-      progress_bar = Bar.new(total: total, width: width, output: output)
+    @json_mode = false
+
+    def self.json_mode!
+      @json_mode = true
+    end
+
+    def self.text_mode!
+      @json_mode = false
+    end
+
+    def self.json_mode?
+      @json_mode
+    end
+
+    def self.bar(total:, width: 30, output: $stderr, fill: '=', empty: ' ', tip: '>')
+      progress_bar = Bar.new(total: total, width: width, output: output, fill: fill, empty: empty, tip: tip)
 
       if block_given?
         result = yield progress_bar
