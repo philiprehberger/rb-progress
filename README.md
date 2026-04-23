@@ -81,6 +81,58 @@ end
 
 The thread is joined automatically when `stop` is called (or when the block completes).
 
+### Pause and Resume
+
+Pause the progress bar to freeze elapsed time calculation (e.g. while waiting for user input):
+
+```ruby
+bar = Philiprehberger::Progress::Bar.new(total: 100)
+50.times { bar.advance }
+bar.pause
+# ... elapsed time is frozen ...
+bar.resume
+50.times { bar.advance }
+bar.finish
+```
+
+### Custom Bar Characters
+
+Customize the fill, empty, and tip characters:
+
+```ruby
+bar = Philiprehberger::Progress::Bar.new(total: 100, fill: '#', empty: '.', tip: '>')
+50.times { bar.advance }
+bar.to_s
+# [########################>.........................]  50.0% | 50/100 | ETA: 0s | 50.0/s
+```
+
+Default characters are `fill: '='`, `empty: ' '`, `tip: '>'`.
+
+### Data Export
+
+Export the current state as a hash:
+
+```ruby
+bar = Philiprehberger::Progress::Bar.new(total: 100)
+50.times { bar.advance }
+bar.to_h
+# => { percentage: 50.0, elapsed: 1.2, eta: 1.2, throughput: 41.7, current: 50, total: 100 }
+```
+
+### JSON Mode
+
+Switch to JSON line output for machine-readable progress:
+
+```ruby
+Philiprehberger::Progress.json_mode!
+bar = Philiprehberger::Progress::Bar.new(total: 100)
+50.times { bar.advance }
+bar.to_s
+# {"percentage":50.0,"elapsed":1.2,"eta":1.2,"throughput":41.7,"current":50,"total":100}
+
+Philiprehberger::Progress.text_mode!  # revert to ANSI bar
+```
+
 ### Enumerable Integration
 
 ```ruby
@@ -121,17 +173,21 @@ multi.finished?  # => true
 
 | Method | Description |
 |--------|-------------|
-| `.new(total:, width: 30, output: $stderr)` | Create a progress bar |
+| `.new(total:, width: 30, output: $stderr, fill: '=', empty: ' ', tip: '>')` | Create a progress bar |
 | `#advance(n = 1)` | Advance by `n` items |
 | `#set(n)` | Set absolute progress position (clamped to 0..total) |
 | `#reset` | Reset to 0, clear finished state, restart timer |
+| `#pause` | Pause the bar, freezing elapsed time |
+| `#resume` | Resume after pause |
+| `#paused?` | Whether the bar is paused |
 | `#finish` | Mark as complete |
 | `#finished?` | Whether the bar is finished |
 | `#percentage` | Current percentage (0.0 to 100.0) |
-| `#elapsed` | Elapsed time in seconds |
+| `#elapsed` | Elapsed time in seconds (excludes paused time) |
 | `#eta` | Estimated time remaining in seconds |
 | `#throughput` | Items per second |
-| `#to_s` | Render the bar as a string |
+| `#to_h` | Hash with `:percentage`, `:elapsed`, `:eta`, `:throughput`, `:current`, `:total` |
+| `#to_s` | Render the bar as a string (or JSON line in json_mode) |
 
 ### `Philiprehberger::Progress::Spinner`
 
@@ -167,6 +223,9 @@ multi.finished?  # => true
 | `Progress.multi(output: $stderr, &block)` | Create multi-bar tracker |
 | `Progress.each(enumerable, label: nil) { \|item\| }` | Iterate with progress |
 | `Progress.map(enumerable, label: nil) { \|item\| }` | Transform with progress, returns results |
+| `Progress.json_mode!` | Switch bar rendering to JSON line output |
+| `Progress.text_mode!` | Switch bar rendering back to ANSI text |
+| `Progress.json_mode?` | Whether JSON mode is active |
 
 ## Development
 

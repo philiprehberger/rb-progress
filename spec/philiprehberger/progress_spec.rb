@@ -371,7 +371,7 @@ RSpec.describe Philiprehberger::Progress do
 
       it 'renders a fully filled bar in to_s' do
         bar = described_class.new(total: 0, width: 10, output: output)
-        fill = Philiprehberger::Progress::Bar::FILL_CHAR * 10
+        fill = '=' * 10
         expect(bar.to_s).to include(fill)
       end
 
@@ -424,12 +424,9 @@ RSpec.describe Philiprehberger::Progress do
         bar = described_class.new(total: 10, width: 20, output: output)
         bar.advance(5)
         str = bar.to_s
-        fill = Philiprehberger::Progress::Bar::FILL_CHAR
-        empty = Philiprehberger::Progress::Bar::EMPTY_CHAR
         bar_section = str.match(/\[(.+?)\]/)[1]
         expect(bar_section.length).to eq(20)
-        expect(bar_section.count(fill)).to eq(10)
-        expect(bar_section.count(empty)).to eq(10)
+        expect(bar_section).to eq("#{'=' * 9}>#{' ' * 10}")
       end
     end
 
@@ -643,7 +640,7 @@ RSpec.describe Philiprehberger::Progress do
 
       it 'renders a fully filled bar for negative total' do
         bar = described_class.new(total: -10, width: 10, output: output)
-        fill = Philiprehberger::Progress::Bar::FILL_CHAR * 10
+        fill = '=' * 10
         expect(bar.to_s).to include(fill)
       end
     end
@@ -915,6 +912,175 @@ RSpec.describe Philiprehberger::Progress do
       spinner = Philiprehberger::Progress::Spinner.new(message: 'Loading...', output: output)
       spinner.message = 'Done'
       expect(spinner.to_s).to include('Done')
+    end
+  end
+
+  describe 'Bar#pause and #resume' do
+    it 'marks the bar as paused' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.pause
+      expect(bar.paused?).to be true
+    end
+
+    it 'is not paused initially' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      expect(bar.paused?).to be false
+    end
+
+    it 'resumes after pause' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.pause
+      bar.resume
+      expect(bar.paused?).to be false
+    end
+
+    it 'freezes elapsed time while paused' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.advance(10)
+      bar.pause
+      elapsed_at_pause = bar.elapsed
+      sleep(0.05)
+      elapsed_while_paused = bar.elapsed
+      expect(elapsed_while_paused).to be_within(0.01).of(elapsed_at_pause)
+    end
+
+    it 'resumes elapsed time after resume' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.advance(10)
+      bar.pause
+      sleep(0.02)
+      bar.resume
+      elapsed_after_resume = bar.elapsed
+      sleep(0.05)
+      elapsed_later = bar.elapsed
+      expect(elapsed_later).to be > elapsed_after_resume
+    end
+
+    it 'pause returns self for chaining' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      expect(bar.pause).to be(bar)
+    end
+
+    it 'resume returns self for chaining' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.pause
+      expect(bar.resume).to be(bar)
+    end
+
+    it 'does not double-pause' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.pause
+      sleep(0.02)
+      bar.pause
+      elapsed1 = bar.elapsed
+      sleep(0.02)
+      elapsed2 = bar.elapsed
+      expect(elapsed2).to be_within(0.01).of(elapsed1)
+    end
+
+    it 'resume when not paused is a no-op' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      expect(bar.resume).to be(bar)
+      expect(bar.paused?).to be false
+    end
+
+    it 'does not pause when finished' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.finish
+      bar.pause
+      expect(bar.paused?).to be false
+    end
+  end
+
+  describe 'Bar custom characters' do
+    it 'uses custom fill, empty, and tip characters' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, width: 10, output: output, fill: '#', empty: '.', tip: '>')
+      bar.advance(5)
+      bar_section = bar.to_s.match(/\[(.+?)\]/)[1]
+      expect(bar_section).to eq('####>.....')
+    end
+
+    it 'uses default custom characters (=, space, >)' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, width: 10, output: output)
+      bar.advance(5)
+      bar_section = bar.to_s.match(/\[(.+?)\]/)[1]
+      expect(bar_section).to eq('====>     ')
+    end
+
+    it 'renders fully filled bar without tip' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, width: 10, output: output, fill: '#', empty: '.', tip: '>')
+      bar.advance(10)
+      bar_section = bar.to_s.match(/\[(.+?)\]/)[1]
+      expect(bar_section).to eq('##########')
+    end
+
+    it 'renders empty bar without tip' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, width: 10, output: output, fill: '#', empty: '.', tip: '>')
+      bar_section = bar.to_s.match(/\[(.+?)\]/)[1]
+      expect(bar_section).to eq('..........')
+    end
+  end
+
+  describe 'Bar#to_h' do
+    it 'returns a hash with expected keys' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.advance(50)
+      h = bar.to_h
+      expect(h).to include(:percentage, :elapsed, :eta, :throughput, :current, :total)
+    end
+
+    it 'returns correct current and total' do
+      bar = Philiprehberger::Progress::Bar.new(total: 200, output: output)
+      bar.advance(75)
+      h = bar.to_h
+      expect(h[:current]).to eq(75)
+      expect(h[:total]).to eq(200)
+    end
+
+    it 'returns correct percentage' do
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.advance(25)
+      expect(bar.to_h[:percentage]).to eq(25.0)
+    end
+
+    it 'returns numeric elapsed' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      expect(bar.to_h[:elapsed]).to be_a(Float)
+    end
+  end
+
+  describe 'Progress.json_mode!' do
+    after { Philiprehberger::Progress.text_mode! }
+
+    it 'switches to JSON output mode' do
+      Philiprehberger::Progress.json_mode!
+      expect(Philiprehberger::Progress.json_mode?).to be true
+    end
+
+    it 'renders bar as JSON in json_mode' do
+      Philiprehberger::Progress.json_mode!
+      bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
+      bar.advance(50)
+      str = bar.to_s
+      parsed = JSON.parse(str)
+      expect(parsed).to include('percentage' => 50.0, 'current' => 50, 'total' => 100)
+    end
+
+    it 'includes all expected keys in JSON output' do
+      Philiprehberger::Progress.json_mode!
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.advance(5)
+      parsed = JSON.parse(bar.to_s)
+      expect(parsed.keys).to contain_exactly('percentage', 'elapsed', 'eta', 'throughput', 'current', 'total')
+    end
+
+    it 'reverts to text mode with text_mode!' do
+      Philiprehberger::Progress.json_mode!
+      Philiprehberger::Progress.text_mode!
+      expect(Philiprehberger::Progress.json_mode?).to be false
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.advance(5)
+      expect(bar.to_s).to include('[')
     end
   end
 end
