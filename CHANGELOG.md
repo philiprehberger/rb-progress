@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-07
+
+### Added
+- `Bar#remaining` — number of steps remaining (clamped to non-negative). Also added to `Bar#to_h`.
+
 ## [0.5.0] - 2026-04-14
 
 ### Added

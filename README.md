@@ -116,7 +116,8 @@ Export the current state as a hash:
 bar = Philiprehberger::Progress::Bar.new(total: 100)
 50.times { bar.advance }
 bar.to_h
-# => { percentage: 50.0, elapsed: 1.2, eta: 1.2, throughput: 41.7, current: 50, total: 100 }
+# => { percentage: 50.0, elapsed: 1.2, eta: 1.2, throughput: 41.7, current: 50, total: 100, remaining: 50 }
+bar.remaining # => 50
 ```
 
 ### JSON Mode
@@ -186,7 +187,8 @@ multi.finished?  # => true
 | `#elapsed` | Elapsed time in seconds (excludes paused time) |
 | `#eta` | Estimated time remaining in seconds |
 | `#throughput` | Items per second |
-| `#to_h` | Hash with `:percentage`, `:elapsed`, `:eta`, `:throughput`, `:current`, `:total` |
+| `#remaining` | Number of steps remaining (clamped to non-negative) |
+| `#to_h` | Hash with `:percentage`, `:elapsed`, `:eta`, `:throughput`, `:current`, `:total`, `:remaining` |
 | `#to_s` | Render the bar as a string (or JSON line in json_mode) |
 
 ### `Philiprehberger::Progress::Spinner`

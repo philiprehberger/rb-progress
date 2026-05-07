@@ -1021,12 +1021,43 @@ RSpec.describe Philiprehberger::Progress do
     end
   end
 
+  describe 'Bar#remaining' do
+    it 'returns the full total at start' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      expect(bar.remaining).to eq(10)
+    end
+
+    it 'decreases as the bar advances' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.advance(3)
+      expect(bar.remaining).to eq(7)
+    end
+
+    it 'clamps to zero when set overshoots the total' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.set(20)
+      expect(bar.remaining).to eq(0)
+    end
+
+    it 'returns zero after finish' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.finish
+      expect(bar.remaining).to eq(0)
+    end
+
+    it 'is exposed via to_h' do
+      bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
+      bar.advance(4)
+      expect(bar.to_h[:remaining]).to eq(6)
+    end
+  end
+
   describe 'Bar#to_h' do
     it 'returns a hash with expected keys' do
       bar = Philiprehberger::Progress::Bar.new(total: 100, output: output)
       bar.advance(50)
       h = bar.to_h
-      expect(h).to include(:percentage, :elapsed, :eta, :throughput, :current, :total)
+      expect(h).to include(:percentage, :elapsed, :eta, :throughput, :current, :total, :remaining)
     end
 
     it 'returns correct current and total' do
@@ -1071,7 +1102,8 @@ RSpec.describe Philiprehberger::Progress do
       bar = Philiprehberger::Progress::Bar.new(total: 10, output: output)
       bar.advance(5)
       parsed = JSON.parse(bar.to_s)
-      expect(parsed.keys).to contain_exactly('percentage', 'elapsed', 'eta', 'throughput', 'current', 'total')
+      expect(parsed.keys).to contain_exactly('percentage', 'elapsed', 'eta', 'throughput', 'current', 'total',
+                                             'remaining')
     end
 
     it 'reverts to text mode with text_mode!' do

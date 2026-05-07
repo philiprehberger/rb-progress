@@ -103,6 +103,13 @@ module Philiprehberger
         (@current.to_f / @total * 100).round(1)
       end
 
+      # Number of steps remaining (clamped to non-negative).
+      #
+      # @return [Integer]
+      def remaining
+        [@total - @current, 0].max
+      end
+
       def elapsed
         raw = now - @start_time - @pause_elapsed
         raw -= (now - @pause_start) if @paused
@@ -132,7 +139,8 @@ module Philiprehberger
           eta: eta,
           throughput: throughput,
           current: @current,
-          total: @total
+          total: @total,
+          remaining: remaining
         }
       end
 
